@@ -142,6 +142,8 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ## 🌐 Production Deployment
 
+🚀 **Live Demo:** Access the live deployed application on Hugging Face Spaces here: [ResearchMind Live App](https://saketh2103-researchmind.hf.space)
+
 ### Option A: Running as a Single Container (Recommended)
 The project includes a multi-stage `Dockerfile` which builds the React frontend and packages it inside the FastAPI backend. FastAPI then automatically serves the static assets at the root path `/`.
 
