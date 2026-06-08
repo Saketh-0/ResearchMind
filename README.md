@@ -152,7 +152,7 @@ The project includes a multi-stage `Dockerfile` which builds the React frontend 
 
 2. **Run the Container**:
    ```bash
-   docker run -p 8000:8000 --env GROQ_API_KEY="your_groq_api_key" researchmind
+   docker run -p 8000:7860 --env GROQ_API_KEY="your_groq_api_key" researchmind
    ```
    Open [http://localhost:8000](http://localhost:8000) to access the complete application.
 
