@@ -1,0 +1,13 @@
+services:
+  researchmind:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: researchmind
+    ports:
+      - "8000:7860"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
