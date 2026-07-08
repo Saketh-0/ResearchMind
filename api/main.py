@@ -15,7 +15,7 @@ from rag.embedder import create_vector_store, get_embedding_model
 from langchain_community.vectorstores import FAISS
 from rag.retriever import retrieve_relevant_chunks, format_context, get_source_references, get_confidence_level
 from rag.chain import get_llm, get_rag_chain, query_rag_stream, query_rag
-from api.database import init_db, append_message, get_chat_history, get_all_sessions, toggle_session_pin, toggle_session_archive, delete_session, register_user, get_user_by_email, merge_guest_data
+from api.database import init_db, append_message, get_chat_history, get_all_sessions, toggle_session_pin, toggle_session_archive, delete_session, register_user, get_user_by_email, update_user_password, merge_guest_data
 import bcrypt
 
 app = FastAPI(title="ResearchMind API")
@@ -373,6 +373,29 @@ async def login(req: AuthRequest, x_user_id: str = Header("anonymous")):
             shutil.rmtree(guest_dir, ignore_errors=True)
             
     return {"message": "Login successful", "user_id": permanent_id, "email": email}
+
+class ResetPasswordRequest(BaseModel):
+    email: str
+    new_password: str
+
+@app.post("/api/auth/reset-password")
+async def reset_password(req: ResetPasswordRequest):
+    email = req.email.strip().lower()
+    if not email or not req.new_password:
+        raise HTTPException(status_code=400, detail="Email and new password required")
+    
+    user = await get_user_by_email(email)
+    if not user:
+        raise HTTPException(status_code=404, detail="No account found with this email")
+    
+    password_bytes = req.new_password.encode('utf-8')
+    new_hash = bcrypt.hashpw(password_bytes[:72], bcrypt.gensalt()).decode('utf-8')
+    
+    success = await update_user_password(email, new_hash)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to update password")
+    
+    return {"message": "Password reset successful. You can now sign in with your new password."}
 
 # Serve static files from the build directory if it exists
 frontend_dist = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "dist")

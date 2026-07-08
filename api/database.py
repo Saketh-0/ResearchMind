@@ -159,6 +159,15 @@ async def get_user_by_email(email: str) -> Dict[str, Any]:
         row = await cursor.fetchone()
         return dict(row) if row else None
 
+async def update_user_password(email: str, new_password_hash: str) -> bool:
+    async with aiosqlite.connect(DB_PATH) as db:
+        cursor = await db.execute(
+            "UPDATE users SET password_hash = ? WHERE email = ?",
+            (new_password_hash, email)
+        )
+        await db.commit()
+        return cursor.rowcount > 0
+
 async def merge_guest_data(guest_id: str, permanent_id: str):
     if guest_id == permanent_id or not guest_id.startswith('usr_'):
         return

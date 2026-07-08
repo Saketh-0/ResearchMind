@@ -75,9 +75,32 @@ export default function MessageBubble({ msg, index, isLast }) {
           >
             <div style={{ color: 'var(--text-secondary)', fontWeight: '500', marginBottom: '6px', letterSpacing: '0.5px' }}>Sources:</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              {sources.map((src, i) => (
+              {(() => {
+                // Deduplicate sources by source+page, keeping best match score
+                const unique = [];
+                const seen = new Set();
+                for (const src of sources) {
+                  const key = typeof src === 'object' ? `${src.source}__${src.page}` : src;
+                  if (!seen.has(key)) {
+                    seen.add(key);
+                    unique.push(src);
+                  }
+                }
+                return unique;
+              })().map((src, i) => (
                 <div key={i} className="source-item" style={{ color: 'rgba(255, 255, 255, 0.65)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span>{src}</span>
+                  <span>📄 {typeof src === 'object' ? `${src.source || 'Unknown'} — Page ${src.page || '?'}` : src}</span>
+                  {typeof src === 'object' && src.similarity_score != null && (
+                    <span style={{ 
+                      fontSize: '10px', 
+                      background: 'rgba(139, 92, 246, 0.15)', 
+                      padding: '2px 6px', 
+                      borderRadius: '8px',
+                      color: 'rgba(139, 92, 246, 0.9)'
+                    }}>
+                      {Math.round(src.similarity_score * 100)}% match
+                    </span>
+                  )}
                 </div>
               ))}
             </div>
