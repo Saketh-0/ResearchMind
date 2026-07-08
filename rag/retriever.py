@@ -65,12 +65,13 @@ def get_source_references(chunks_with_scores: list[tuple[Document, float]]) -> l
     """
     sources = []
     for doc, score in chunks_with_scores:
-        similarity = 1 / (1 + float(score))  # Convert L2 distance to similarity
+        # Exact mapping from normalized L2 distance to cosine similarity
+        similarity = 1 - (float(score) / 2)
         sources.append({
             "source": doc.metadata.get("source", "Unknown"),
             "page": doc.metadata.get("page", "?"),
             "content": doc.page_content[:200] + "..." if len(doc.page_content) > 200 else doc.page_content,
-            "similarity_score": round(similarity, 3)
+            "similarity_score": round(max(0.0, similarity), 3)
         })
     return sources
 
@@ -79,13 +80,12 @@ def get_confidence_level(chunks_with_scores: list[tuple[Document, float]]) -> tu
     """
     Determine confidence level based on average similarity scores.
 
-    FAISS returns L2 distances (lower = more similar).
-    We convert to similarity: similarity = 1 / (1 + distance).
+    For normalized embeddings, cosine similarity = 1 - (L2_distance / 2).
 
     Thresholds:
-        > 0.8  → HIGH   (🟢)
-        0.5-0.8 → MEDIUM (🟡)
-        < 0.5  → LOW    (🔴)
+        >= 0.60  → HIGH   (🟢)
+        0.45-0.60 → MEDIUM (🟡)
+        < 0.45   → LOW    (🔴)
 
     Args:
         chunks_with_scores: List of (Document, score) tuples.
@@ -96,12 +96,12 @@ def get_confidence_level(chunks_with_scores: list[tuple[Document, float]]) -> tu
     if not chunks_with_scores:
         return "LOW", "🔴"
 
-    similarities = [1 / (1 + score) for _, score in chunks_with_scores]
+    similarities = [1 - (float(score) / 2) for _, score in chunks_with_scores]
     avg_similarity = sum(similarities) / len(similarities)
 
-    if avg_similarity > 0.8:
+    if avg_similarity >= 0.60:
         return "HIGH", "🟢"
-    elif avg_similarity >= 0.5:
+    elif avg_similarity >= 0.45:
         return "MEDIUM", "🟡"
     else:
         return "LOW", "🔴"
