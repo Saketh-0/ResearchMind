@@ -401,5 +401,17 @@ async def reset_password(req: ResetPasswordRequest):
 frontend_dist = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "dist")
 if os.path.exists(frontend_dist):
     from fastapi.staticfiles import StaticFiles
-    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="static")
+    from fastapi.responses import FileResponse
+    from starlette.types import Scope
+
+    class NoCacheStaticFiles(StaticFiles):
+        def file_response(self, mount_path: str, stat_result, scope: Scope, status_code: int = 200) -> FileResponse:
+            response = super().file_response(mount_path, stat_result, scope, status_code)
+            # Disable caching so users always get the latest version
+            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+            response.headers["Pragma"] = "no-cache"
+            response.headers["Expires"] = "0"
+            return response
+
+    app.mount("/", NoCacheStaticFiles(directory=frontend_dist, html=True), name="static")
 
