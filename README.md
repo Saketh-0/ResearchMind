@@ -1,12 +1,3 @@
----
-title: ResearchMind
-emoji: 🔍
-colorFrom: blue
-colorTo: indigo
-sdk: docker
-pinned: false
----
-
 # ResearchMind 🔍
 
 > Multi-document RAG chatbot with Agentic web fallback — built with React (Vite), FastAPI, FAISS, SQLite, and Groq (Llama 3)
